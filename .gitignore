@@ -1,0 +1,12 @@
+#Compiler output files
+*.o
+*.exe
+*.dll
+*.so
+
+#Compiler output folders
+bin/
+obj/
+
+#Temporary
+*.py
