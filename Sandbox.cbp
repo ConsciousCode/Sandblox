@@ -66,6 +66,7 @@
 		<Unit filename="color.h" />
 		<Unit filename="colors.h" />
 		<Unit filename="compress.h" />
+		<Unit filename="endian.h" />
 		<Unit filename="error.h" />
 		<Unit filename="game.cpp" />
 		<Unit filename="game.h" />

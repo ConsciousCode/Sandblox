@@ -3,11 +3,7 @@
 "MOD"
 #mod metadata section
 DWORD chunklength
-STRING name
 DWORD version
-BYTE authors
-[authors]
-	STRING author
 BYTE type
 	0 - package
 	1 - world
@@ -23,10 +19,14 @@ BIT(8) permission
 	3 - input
 	4 - overlay
 	5 - render
+STRING name
+BYTE authors
+[authors]
+	STRING author
 BYTE mods_modding
 [mods_modding]
 	STRING mod_name
-"ERC" #Embedded ResourCes
+"EMBED" #Embedded resources
 DWORD chunklength
 <compressed file archive>
 "CODE"
@@ -47,6 +47,3 @@ WORD blocks
 	WORD code
 	STRING mesh
 	STRING skin
-"CHEK"
-#Checksum of the file to make sure there were no errors
-<SHA-512 checksum>

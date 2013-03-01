@@ -186,6 +186,13 @@ struct ModSection{
 	 * A list of mods it's metamodding.
 	**/
 	std::vector<std::string> metamods;
+
+	/**
+	 * Writes the section's contents to the given file
+	 *
+	 * @param f The FILE pointer to the file opened for writing.
+	**/
+	void write(FILE* f);
 };
 
 /**
@@ -200,7 +207,17 @@ struct ResourceSection{
 	 * The length in bytes of the chunk (after this)
 	**/
 	ulil_t chunklength;
-	std::vector<Resource*> resources;
+	/**
+	 * A list of resources.
+	**/
+	std::vector<std::string> resources;
+
+	/**
+	 * Writes the section's contents to the given file
+	 *
+	 * @param f The FILE pointer to the file opened for writing.
+	**/
+	void write(FILE* f);
 };
 
 /**
@@ -219,6 +236,13 @@ struct CodeSection{
 	 * A list of Python code objects.
 	**/
 	std::vector<PyObject*> codebits;
+
+	/**
+	 * Writes the section's contents to the given file
+	 *
+	 * @param f The FILE pointer to the file opened for writing.
+	**/
+	void write(FILE* f);
 };
 
 /**
@@ -255,9 +279,9 @@ struct BloxSection{
 		**/
 		float gravity;
 		/**
-		 * The ID of a code object providing extra functionality to the block.
+		 * The filename of the code object providing extra functionality to the block.
 		**/
-		unsigned short code;
+		std::string code;
 		/**
 		 * The filename of the mesh.
 		 *
@@ -269,26 +293,41 @@ struct BloxSection{
 		 *
 		 * Devnote: Can these files be arithmetically ID'd?
 		**/
+		std::string skin;
+
+		/**
+		 * Writes the block definition's contents to the given file
+		 *
+		 * @param f The FILE pointer to the file opened for writing.
+		**/
+		void write(FILE* f);
 	};
 
 	/**
 	 * The list of block definitions.
 	**/
 	std::vector<BlockDef*> blockdefs;
+
+	/**
+	 * Writes the section's contents to the given file
+	 *
+	 * @param f The FILE pointer to the file opened for writing.
+	**/
+	void write(FILE* f);
 };
 
 /**
- * The .mod file checksum.
+ * marshal.dumps, pointer filled by init_mods()
+ *
+ * Preloaded for speed.
 **/
-struct ChecksumSection{
-	/**
-	 * "CHEK"
-	**/
-	char signature[4];
-	/**
-	 * The checksum.
-	**/
-	unsigned char checksum[64];
-};
+PyObject* marshal_dumps;
+
+/**
+ * marshal.loads, pointer filled by init_mods()
+ *
+ * Preloaded for speed.
+**/
+PyObject* marshal_loads;
 
 #endif

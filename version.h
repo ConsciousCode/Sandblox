@@ -20,6 +20,15 @@ PyObject* version_repr(PyObject*,PyObject*);
 PyObject* version_str(PyObject*,PyObject*);
 
 /**
+ * Convert a version string to a packed integer.
+ *
+ * @param s The version string (format: byte[.byte[.byte[.byte]]], ex: "1.0.4.37")
+ *
+ * @return A packed integer representing the version.
+**/
+unsigned s2version(const std::string& s)
+
+/**
  * Make a new Version instance.
 **/
 PyObject* Version_New(const char*);

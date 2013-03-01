@@ -19,6 +19,19 @@ int version_init(Version* self,PyObject* args,PyObject* kwargs){
 	return -1;
 }
 
+unsigned s2version(const std::string& s){
+	unsigned major=0,minor=0,build=0,revision=0;
+	if(sscanf(s.c_str(),"%i.%i.%i.%i",&major,&minor,&build,&revision)){
+		major&=0xff;
+		minor&=0xff;
+		build&=0xff;
+		revision&=0xff;
+
+		return major<<24 | minor<<16 | build<<8 | revision;
+	}
+	return 0;
+}
+
 PyObject* version_repr(PyObject* self){
 	return PyBytes_FromFormat("version(%i,%i,%i,%i)",self->major,self->minor,self->build,self->revision);
 }
