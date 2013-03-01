@@ -9,7 +9,7 @@
  * @param m The mod context.
  * @param func The function to bind.
 **/
-PyObject* ModBinding_New(Mod* m,PyCFunction func);
+PyObject* ModBinding_New(Mod* m,ternaryfunc func);
 
 PyObject* ModBinding_call(PyObject*,PyObject*,PyObject*);
 
@@ -27,7 +27,7 @@ struct ModBinding{
 	/**
 	 * The bound function.
 	**/
-	PyCFunction callback;
+	ternaryfunc callback;
 };
 
 static PyTypeObject ModBinding_Type={

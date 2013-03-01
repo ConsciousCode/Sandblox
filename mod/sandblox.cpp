@@ -4,15 +4,7 @@
 
 #include "sandblox.h"
 #include "../game.h"
-
-/**
- * Quick helper function to capitalize an entire std::string.
-**/
-static void upper(std::string& s){
-	for(unsigned i=0;i<s.length();++i){
-		s[i]=toupper(s[i]);
-	}
-}
+#include "../util.h"
 
 /**
  * Dictionary entry with a name and numeric value

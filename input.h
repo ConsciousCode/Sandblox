@@ -7,6 +7,8 @@
 
 #include <vector>
 
+#include "mod.h"
+
 using namespace irr;
 
 /**

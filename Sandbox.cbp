@@ -87,8 +87,17 @@
 		<Unit filename="overload.h" />
 		<Unit filename="player.cpp" />
 		<Unit filename="player.h" />
+		<Unit filename="systemutils.cpp" />
+		<Unit filename="systemutils.h" />
+		<Unit filename="util.h" />
 		<Unit filename="version.cpp" />
 		<Unit filename="version.h" />
+		<Unit filename="xml/tinystr.cpp" />
+		<Unit filename="xml/tinystr.h" />
+		<Unit filename="xml/tinyxml.cpp" />
+		<Unit filename="xml/tinyxml.h" />
+		<Unit filename="xml/tinyxmlerror.cpp" />
+		<Unit filename="xml/tinyxmlparser.cpp" />
 		<Extensions>
 			<DoxyBlocks>
 				<comment_style block="0" line="0" />

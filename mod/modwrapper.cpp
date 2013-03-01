@@ -15,7 +15,7 @@ PyObject* ModBinding_call(ModBinding* self,PyObject* args,PyObject* kwargs){
 	return self->callback(self->callback,proxied_args);
 }
 
-PyObject* ModBinding_New(Mod* m,PyCFunction f){
+PyObject* ModBinding_New(Mod* m,ternaryfunc f){
 	ModBinding* self=(ModBinding*)PyObject_New(&ModBinding_Type,NULL);
 	self->mod=m;
 	self->callback=f;

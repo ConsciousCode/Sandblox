@@ -12,7 +12,7 @@
 **/
 const char* whitelisted_libs[]={
 	//Specialized libraries(may or may not be initialized for the mod)
-	"SANDBLOX",//Access to global SANDBLOX settings
+	"sandblox",//Access to global SANDBLOX settings
 	"game",//Access to the game(map data,relevant user statistics,user input,etc)
 	"mod",//Access to the mod's own settings and resources
 	"render",//Direct access to rendering within the environment
@@ -68,22 +68,25 @@ const char* blacklisted_builtins[]={
 PyObject* original_import;
 
 /**
- * Static initializer to perform function hooks.
+ * A proxy function wrapping the standard __import__.
 **/
-struct __overload_static_init{
-	/**
-	 * Perform the __import__ hook.
-	**/
-	void init_import();
+PyObject* import_hook(PyObject*,PyObject*,PyObject*);
 
-	/**
-	 * Remove all dangerous builtins.
-	**/
-	void init_removals();
+/**
+ * Returns a proxy function wrapping import_hook in the context of the given mod.
+ *
+ * @param m The mod context.
+**/
+PyObject* contextualize_import(Mod* m);
 
-	__overload_static_init();
-};
+/**
+ * Initialize global overloads (used by all mods)
+**/
+void init_overload();
 
-extern __overload_static_init _overload_static_init;
+/**
+ * All the safe builtins as dictated by the blacklist.
+**/
+PyObject* safe_builtins;
 
 #endif

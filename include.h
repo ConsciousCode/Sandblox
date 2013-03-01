@@ -6,12 +6,12 @@
 
 #include <irrlicht.h>
 
-#ifdef _IRR_WINDOWS_
-	#define WINDOWS
-#endif
+#define TIXML_USE_STL
+#include "tinyxml.h"
 
-#define SANDBLOX_VERSION "1.0.0.0"
+#define SANDBLOX_VERSION "0.1.0.0"
 #define SANDBLOX_3DENGINE "Irrlicht"
+#define MOD_DIRECTORY "mods/"
 
 #include "game.h"
 

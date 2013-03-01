@@ -1,0 +1,66 @@
+.world file format
+
+"WORLD"
+#mods section
+WORD mods
+[mods]
+	DWORD modlength
+	<see .mod file format, minus the BLOX section>
+"BLOX"
+#define all used blocks in a sequential list to make ids very well-defined
+DWORD chunklength
+WORD blocks
+[blocks]
+	STRING name
+	STRING description
+	FLOAT light
+	FLOAT gravity
+	BYTE extra #extra length required (in bytes)
+	WORD code
+	STRING mesh
+	STRING skin
+"DATA"
+#World chunk data section
+#Stored as a specialized "octree" with subdivisions marked by tags in the most-significant 4 bits:
+	0xff - divide the block into 8 parts (standard octree)
+	0xfe - split the block in half in the x direction
+	0xfd - split the block in half in the y direction
+	0xfc - split the block in half in the z direction
+	0xfb - split the block in half and the higher x side into fourths
+	0xfa - split the block in half and the lower x side into fourths
+	0xf9 - split the block in half and the higher y side into fourths
+	0xf8 - split the block in half and the lower y side into fourths
+	0xf7 - split the block in half and the higher z side into fourths
+	0xf6 - split the block in half and the lower z side into fourths
+#The byte-width of the ids depends on the value of "blocks" in the BLOX section - 1 byte if blocks<256, else 2 bytes
+   ____
+ /0  1/|
+/3__2/ |
+|  4 |5/
+|7__6|/
+
+BYTE depth #used to determine the size of these blocks
+#the tree should never go deeper than depth. At the lowest level, blocks are the most basic size.
+#
+BYTE/WORD id
+	(if id=0xff or 0xffff)
+	#(see the diagram above)
+	BYTE/WORD id0
+	<any extra as defined by the block id>
+	BYTE/WORD id1
+	<any extra as defined by the block id>
+	BYTE/WORD id2
+	<any extra as defined by the block id>
+	BYTE/WORD id3
+	<any extra as defined by the block id>
+	BYTE/WORD id4
+	<any extra as defined by the block id>
+	BYTE/WORD id5
+	<any extra as defined by the block id>
+	BYTE/WORD id6
+	<any extra as defined by the block id>
+	BYTE/WORD id7
+	<any extra as defined by the block id>
+	#if any of the above ids are fully set, the structure repeats
+#Note: This whole structure needs to be compressed in some way
+#If you have a 1000x1000x4 patch with different blocks in each layer, the octree yields no compression whatsoever, which bothers me to no end.

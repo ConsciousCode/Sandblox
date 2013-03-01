@@ -20,7 +20,10 @@ This project uses GPL, which should come in the LICENSE file along with the sour
 Dependencies
 ------------
 
-This program requires CPython 3.3 and Irrlicht 1.8.
+This program requires:
+ * CPython 3.3 http://www.python.org/getit/
+ * Irrlicht 1.8 http://irrlicht.sourceforge.net/
+ * TinyXML http://sourceforge.net/projects/tinyxml/?source=dlp (included)
 
 Modding
 -------

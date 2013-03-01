@@ -3,6 +3,9 @@
 #include "game.h"
 #include "modwrapper.h"
 
+/**
+ * Hook the given input.
+**/
 PyObject* perform_input_hook(PyObject* self,PyObject* args){
 	Mod* mod;
 	char* type;
@@ -62,7 +65,10 @@ PyObject* perform_input_hook(PyObject* self,PyObject* args){
 	return NULL;
 }
 
-PyObject* remove_input_hook(PyObject* self,PyObject* args){
+/**
+ * Remove the given input hook if the mod has access to it.
+**/
+static PyObject* remove_input_hook(PyObject* self,PyObject* args){
 	Mod* mod;
 	char* type;
 	char* tohook;
