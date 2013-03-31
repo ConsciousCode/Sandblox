@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<block>
+	<!-- The name of the block -->
+	<name>Sand</name>
+	<!-- The block's description -->
+	<description>Lots of sand grains all making one big block.</description>
+	<!-- Light assumed to be 0.0 - gives how much light the block makes
+	<light>0.0</light> -->
+	<!-- How much gravity affects a block - assumed to be 0.0, 1.0 is "normal" gravity -->
+	<gravity>1.0</gravity>
+	<!-- Describes the shape of the block
+		* type is assumed to be "cube"
+		* 
+	<shape type="custom"></shape> -->
+	<!-- Skin overlaid on the block (in relation to resources/)-->
+	<skin>sand.png</skin>
+</block>

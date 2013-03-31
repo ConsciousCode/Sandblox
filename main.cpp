@@ -2,6 +2,8 @@
 #include "include.h"
 
 int main(){
+	Mod::compile("../../defmod/","../../default.mod");
+	#if 0
 	try{
 		//initialize
 		Py_Initialize();
@@ -9,15 +11,15 @@ int main(){
 
 		//game.scenemanager->addCameraSceneNodeFPS();//0,core::vector3df(0,-40,0),core::vector3df(0,0,0));
 
-		Block* block=new Block(game.scenemanager->getRootSceneNode());
+		//Block* block=new Block(game.scenemanager->getRootSceneNode());
 		/*scene::ISceneNodeAnimator* anim=game.scenemanager->createRotationAnimator(core::vector3df(0.8f,0,0.8f));
 		if(anim){
 			block->addAnimator(anim);
 			anim->drop();
 			anim=NULL;
 		}*/
-		block->drop();
-		block=NULL;
+		//block->drop();
+		//block=NULL;
 
 		/*init_hooks();
 		init_mods();*/
@@ -46,4 +48,5 @@ int main(){
 	}
 
 	return 0;
+	#endif
 }

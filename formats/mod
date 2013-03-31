@@ -1,6 +1,6 @@
 .mod file format (little endian)
 
-"MOD"
+"MOD "
 #mod metadata section
 DWORD chunklength
 DWORD version
@@ -26,7 +26,7 @@ BYTE authors
 BYTE mods_modding
 [mods_modding]
 	STRING mod_name
-"EMBED" #Embedded resources
+"EMBD" #Embedded resources
 DWORD chunklength
 <compressed file archive>
 "CODE"

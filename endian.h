@@ -298,12 +298,12 @@ namespace endian{
 			return _swapper(v);
 		}
 
-		typedef big<signed char> lil8_t;
-		typedef big<unsigned char> ulil8_t;
-		typedef big<short> lil16_t;
-		typedef big<unsigned short> ulil16_t;
-		typedef big<int> lil32_t;
-		typedef big<unsigned> ulil32_t;
+		typedef big<signed char> big8_t;
+		typedef big<unsigned char> ubig8_t;
+		typedef big<short> big16_t;
+		typedef big<unsigned short> ubig16_t;
+		typedef big<int> big32_t;
+		typedef big<unsigned> ubig32_t;
 
 		typedef signed char lil8_t;
 		typedef unsigned char ulil8_t;

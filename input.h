@@ -57,7 +57,7 @@ struct InputHook{
 	 * @param event The specific event to hook (ignored for ALL, ALLKEY, and ALLMOUSE).
 	 * @param hook The C function to call when the event happens.
 	**/
-	InputHook(Mod*,InputType,unsigned,void(*hook)());
+	InputHook(Mod*,InputType,unsigned,PyObject*);
 
 	/**
 	 * Create an event hook.
@@ -66,7 +66,7 @@ struct InputHook{
 	 * @param event The specific event to hook (ignored for ALL, ALLKEY, and ALLMOUSE).
 	 * @param hook The function to call when the event happens.
 	**/
-	InputHook(Mod*,InputType,unsigned,PyObject*);
+	InputHook(Mod*,InputType,unsigned,PyCFunction);
 };
 
 /**

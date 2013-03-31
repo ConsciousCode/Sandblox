@@ -5,7 +5,6 @@
 #include <vector>
 
 #include "input.h"
-#include "cpywrapper.h"
 
 using namespace irr;
 
@@ -18,7 +17,7 @@ InputHook::InputHook(Mod* m,InputType t,unsigned event,PyObject* hook):owner(m),
 	}
 }
 
-InputHook::InputHook(Mod* m,InputType t,unsigned event,PyCFunction f):owner(m),type(t){
+InputHook::InputHook(Mod* m,InputType t,unsigned event,PyCFunction f):type(t),owner(m){
 	struct PyMethodDef cdef={"<Anonymous C++ input hook>",f,METH_NOARGS,"An input hook function."};
 
 	callback=PyCFunction_New(&cdef,NULL);

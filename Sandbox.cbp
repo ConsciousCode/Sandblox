@@ -84,6 +84,8 @@
 		<Unit filename="mod/sandblox.cpp" />
 		<Unit filename="mod/sandblox.h" />
 		<Unit filename="object3d.h" />
+		<Unit filename="optimize.cpp" />
+		<Unit filename="optimize.h" />
 		<Unit filename="overload.cpp" />
 		<Unit filename="overload.h" />
 		<Unit filename="player.cpp" />
@@ -94,11 +96,11 @@
 		<Unit filename="version.cpp" />
 		<Unit filename="version.h" />
 		<Unit filename="xml/tinystr.cpp" />
-		<Unit filename="xml/tinystr.h" />
 		<Unit filename="xml/tinyxml.cpp" />
-		<Unit filename="xml/tinyxml.h" />
 		<Unit filename="xml/tinyxmlerror.cpp" />
 		<Unit filename="xml/tinyxmlparser.cpp" />
+		<Unit filename="xml/xml.cpp" />
+		<Unit filename="xml/xml.h" />
 		<Extensions>
 			<DoxyBlocks>
 				<comment_style block="0" line="0" />

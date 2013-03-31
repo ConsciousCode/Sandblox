@@ -33,7 +33,7 @@ struct ModBinding{
 static PyTypeObject ModBinding_Type={
 	PyObject_HEAD_INIT(NULL)
 	0,						 /*ob_size*/
-	"ModBinding",			 /*tp_name*/
+	(char*)"ModBinding",			 /*tp_name*/
 	sizeof(ModBinding),			 /*tp_basicsize*/
 	0,						 /*tp_itemsize*/
 	0,						 /*tp_dealloc*/
@@ -52,7 +52,7 @@ static PyTypeObject ModBinding_Type={
 	0,						 /*tp_setattro*/
 	0,						 /*tp_as_buffer*/
 	Py_TPFLAGS_DEFAULT|Py_TPFLAGS_BASETYPE, /*tp_flags*/
-	"Wraps an inner function in a mod context.",/* tp_doc */
+	(char*)"Wraps an inner function in a mod context.",/* tp_doc */
 };
 
 #endif

@@ -3,49 +3,50 @@
 #include <string>
 
 #include "mod.h"
+
 #include "util.h"
 #include "overload.h"
 #include "systemutils.h"
 
-#include "../xml/tinyxml.h"
+#include "mod/sandblox.h"
+
+#include "xml/xml.h"
 
 void load_mods(){
 	DIR* dp=opendir("mods/");
 	dirent* dep;
 
-	while(dep=readdir(dp)){
+	while((dep=readdir(dp))){
 
 	}
 }
 
+///TODO: Actually write this!
 void init_mods(){
-	PyObject* marshal_lib=PyImport_Import("marshal");
-	marshal_dumps=PyObject_GetAttrString(marshal_lib,"dumps");
-	marshal_loads=PyObject_GetAttrString(marshal_lib,"loads");
+	PyObject* marshal_lib=PyImport_ImportModule("marshal");
+	Mod::marshal_dumps=PyObject_GetAttrString(marshal_lib,"dumps");
+	Mod::marshal_loads=PyObject_GetAttrString(marshal_lib,"loads");
 
 	init_overload();
 
-	PyObject* m=PyModule_Create(&Sandblox_mod);
-	if(m==NULL){
-		return NULL;
-	}
-	return m;
+	//PyObject* m=PyModule_Create(&Sandblox_mod);
 }
 
 bool Mod::can_metamod(Mod* m){
-	for(unsigned i=0;metamods[i]!=NULL;++i){
-		if(metamods[i]==m){
+	for(unsigned i=0;metamods[i]!="";++i){
+		if(metamods[i]==m->name){
 			return true;
 		}
 	}
 	return false;
 }
 
-void Mod::compile(const std::string& folder,const std::string& out){
+void Mod::compile(const std::string& f,const std::string& out){
+	std::string folder(f);
 	if(folder[folder.length()-1]!='/' and folder[folder.length()-1]!='\\'){
 		folder+='/';
 	}
-	TiXmlDocument metadata(folder+"metadata.xml");
+	Document metadata((folder+"metadata.xml").c_str());
 	if(!metadata.LoadFile()){
 		///TODO: Implement code to handle invalid mods
 		return;
@@ -53,21 +54,22 @@ void Mod::compile(const std::string& folder,const std::string& out){
 
 	ModSection ms;
 	ResourceSection rs;
+	CodeSection cs;
 	BloxSection bs;
 
-	TiXmlHandle handle(&metadata);
-	TiXmlElement* elem;
-	TiXmlHandle root;
-
-	elem=handle.FirstChildElement();
-	if(!elem){
+	Element root(metadata.root());
+	if(!root.valid()){
 		//See above TODO
 		return;
 	}
-	root=TiXmlHandle(elem);
+	TiXmlHandle root(elem);
+
+	/*
+	 * Mod metadata
+	*/
 
 	//Name of the mod
-	ms.name=root.FirstChildElement("name").ValueTStr();
+	ms.name=root.FirstChildElement("name").Text();
 
 	//Description of the mod
 	ms.description=root.FirstChildElement("description").ValueTStr();
@@ -101,11 +103,11 @@ void Mod::compile(const std::string& folder,const std::string& out){
 	elem=root.FirstChildElement("permissions");
 	if(elem){
 		permissions.readmap=bool(elem->FirstChildElement("readmap"));
-		permissions.readmap=bool(elem->FirstChildElement("writemap"));
-		permissions.readmap=bool(elem->FirstChildElement("player"));
-		permissions.readmap=bool(elem->FirstChildElement("input"));
-		permissions.readmap=bool(elem->FirstChildElement("overlay"));
-		permissions.readmap=bool(elem->FirstChildElement("render"));
+		permissions.writemap=bool(elem->FirstChildElement("writemap"));
+		permissions.player=bool(elem->FirstChildElement("player"));
+		permissions.input=bool(elem->FirstChildElement("input"));
+		permissions.overlay=bool(elem->FirstChildElement("overlay"));
+		permissions.render=bool(elem->FirstChildElement("render"));
 	}
 
 	//The mod's type
@@ -158,46 +160,109 @@ void Mod::compile(const std::string& folder,const std::string& out){
 		}
 	}
 
+	/*
+	 * Mod resources
+	*/
+
 	//load resources
 	///TODO: do a recursive search
-	DIR* dirp=opendir((folder+"resources/").c_str());
+	DIR* dirp=opendir((folder+"resources/"+folder).c_str());
+	struct Folder{
+		std::string name;
+		DIR* dirp;
+	};
+
 	if(dirp){
+		std::stack<Folder> folders;
+		folders.push({folder,dirp});
+
 		dirent* dp;
 		//use this to check if it's a folder
 		DIR* check;
 
-		while(dp=readdir(dirp)){
-			check=opendir((folder+"resources/"+dp->d_name).c_str());
-			if(!check){
-				closedir(check);
-				rs.resources.push_back(dp->d_name);
+		while(folders.size()>0){
+			while(dp=readdir(folders.top().dirp)){
+				check=opendir((folder+"resources/"+folders.top().name+dp->d_name).c_str());
+				if(check){
+					folders.push({folders.top().name+dp->d_name,check});
+				}
+				else{
+					rs.resources.push_back(folders.top().name+dp->d_name);
+				}
 			}
+			folders.pop();
 		}
+		closedir(dirp);
 	}
 
-	//load code
-	///TODO: do a recursive search
-	DIR* dirp=opendir((folder+"code/"));
+	/*
+	 * Mod code/libraries
+	*/
+
+	//load libraries
+	dirp=opendir(folder+"libs/");
 	if(dirp){
-		dirent* dp;
-		PyObject* code;
-		FILE* f;
+		std::stack<Folder> folders;
+		folders.push({folder,dirp});
 
-		while(dp=readdir(dirp)){
-			f=fopen(dp->d_name,"r");
-			code=PyNode_Compile(PyParser_SimpleParseFile())
-			fclose(f);
-			if(code){
-				rs.resources.push_back(code);
+		dirent* dp;
+		//use this to check if it's a folder
+		DIR* check;
+
+		while(folders.size()>0){
+			while(dp=readdir(folders.top().dirp)){
+				check=opendir((folder+"libs/"+folders.top().name+dp->d_name).c_str());
+				if(check){
+					folders.push({folders.top().name+dp->d_name,check});
+				}
+				else{
+					cs.codebits.push_back(folders.top().name+dp->d_name);
+				}
 			}
-			else{
-				//probably syntax error
-				///TODO: Alert the user of this error
-				//for now, ignore
-				PyErr_Clear();
-			}
+			folders.pop();
 		}
+		closedir(dirp);
 	}
+
+
+
+	/*
+	 * Mod block definitions
+	*/
+
+	//load block definitions
+	dirp=opendir(folder+"blocks/");
+	if(dirp){
+		std::stack<Folder> folders;
+		folders.push({folder,dirp});
+
+		dirent* dp;
+		//use this to check if it's a folder
+		DIR* check;
+
+		while(folders.size()>0){
+			while(dp=readdir(folders.top().dirp)){
+				check=opendir((folder+"blocks/"+folders.top().name+dp->d_name).c_str());
+				if(check){
+					folders.push({folders.top().name+dp->d_name,check});
+				}
+				else{
+					BloxSection::BlockDef* bd=new BloxSection::BlockDef;
+					bd->load(folders.top().name+dp->d_name);
+					bs.blockdefs.push_back(bd);
+				}
+			}
+			folders.pop();
+		}
+		closedir(dirp);
+	}
+
+	FILE* f=fopen(out.c_str(),"w");
+
+	ms.write(f);
+	rs.write(f);
+	cs.write(f);
+	bs.write(f);
 }
 
 Mod::Mod(const std::string& fname){
@@ -217,7 +282,7 @@ Mod::Mod(const std::string& fname){
 
 void ModSection::write(FILE* f){
 	//signature
-	fwrite("MOD",sizeof(char),3,f);
+	fwrite("MOD ",sizeof(char),4,f);
 
 	//numeric members
 	fwrite(&chunklength,sizeof(chunklength),1,f);
@@ -263,7 +328,7 @@ void ModSection::write(FILE* f){
 
 void ResourceSection::write(FILE* f){
 	//signature
-	fwrite("EMBED",sizeof(char),5,f);
+	fwrite("EMBD",sizeof(char),4,f);
 
 	//numeric members
 	fwrite(&chunklength,sizeof(chunklength),1,f);
@@ -290,6 +355,126 @@ void ResourceSection::write(FILE* f){
 		//copy file
 		while(!feof(rc)){
 			fputc(fgetc(f),rc);
+		}
+	}
+}
+
+bool Mod::load(const std::string& fname){
+	struct ModHeader{
+		char signature[4];//"MOD "
+		endian::ulil_t size;
+		endian::ulil_t version;
+		endian::ulil8_t type;///Dev Note: Is this necessary?
+		endian::ulil8_t permission;
+	}modhead;
+
+	FILE* f=fopen(fname.c_str(),"r");
+
+	//read static length data
+	fread(&modhead,sizeof(modhead),1,f);
+
+	//check signature
+	if(!memcmp("MOD ",modhead.signature,4)){
+		return false;
+	}
+	//unsupported type
+	if(type>5){
+		return false;
+	}
+
+	//build the version and permissions
+	v=Version_New(modhead.version);
+	permissions=(Permissions)modhead.permission;
+	type=modhead.type;
+
+	//read the name
+	lil8_t length;
+	fread(&length,sizeof(length),1,f);
+	char* n=new char[length];
+	fread(n,sizeof(char),length,f);
+
+	name=n;
+	delete[] n;
+
+	//read the authors
+	fread(&length,sizeof(length),1,f);
+
+	for(unsigned i=0;i<length;++i){
+		lil8_t alen;
+		fread(&alen,sizeof(alen),1,f);
+
+		n=new char[alen];
+		fread(n,sizeof(char),alen,f);
+		authors.push_back(n);
+		delete[] n;
+	}
+
+	//read the mods that can be metamodded
+	fread(&length,sizeof(length),1,f);
+
+	for(unsigned i=0;i<length;++i){
+		lil8_t alen;
+		fread(&alen,sizeof(alen),1,f);
+
+		n=new char[alen];
+		fread(n,sizeof(char),alen,f);
+		metamods.push_back(n);
+		delete[] n;
+	}
+
+	/*
+	 * EMBeDed resource section
+	*/
+	struct EmbedHeader{
+		char signature[4];
+		endian::ulil_t size;
+	}embedhead;
+
+	//read embed static length data
+	fread(&embedhead,sizeof(embedhead),1,f);
+
+	//verify signature
+	if(!memcmp("EMBD",embedhead.signature,4)){
+		return false;
+	}
+
+	struct Directory{
+		unsigned superpos;
+		std::string dir;
+		unsigned contained;
+
+		Directory(const Directory& parent,unsigned pos,FILE* f):superpos(pos){
+			endian::ulil8_t dlen;
+			fread(&dlen,sizeof(dlen),1,f);
+			char* buf=new char[dlen];
+			fread(buf,sizeof(char),dlen,f);
+			dir=parent.dir+'/'+buf;
+			delete[] buf;
+			fread(&contained,sizeof(contained),1,f);
+		}
+	};
+
+	std::stack<Directory> fsystem;
+	fsystem.push(Directory(0,f));
+	unsigned pos=0;
+
+	while(fsystem.size()>0){
+		if(fsystem.top().name[fsystem.top().name.length()-1]=='/'){
+			//directory
+			if(fsystem.top().superpos<pos){
+				fsystem.push(Directory(fsystem.top(),pos,f));
+				pos=0;
+			}
+			else{
+				pos=fsystem.top().superpos+1;
+				fsystem.pop();
+			}
+		}
+		else{
+			//file
+			resources.push_back(Resource(fsystem.top().name,fsystem.top().contained,f));
+			pos=fsystem.top().superpos+1;
+			fsystem.pop();
 		}
 	}
 }
@@ -355,6 +540,54 @@ void BloxSection::BlockDef::write(FILE* f){
 
 	fwrite(&tmp,sizeof(tmp),1,f);
 	fwrite(skin.c_str(),sizeof(char),tmp,f);
+}
+
+void BloxSection::BlockDef::load(const std::string& fname){
+	TiXmlDocument block(fname);
+
+	if(!block.LoadFile()){
+		return false;
+	}
+
+	TiXmlHandle handle(&block);
+	TiXmlElement* elem;
+	TiXmlHandle root;
+
+	elem=handle.FirstChildElement("block");
+	if(!elem){
+		return false;
+	}
+	root=TiXmlHandle(elem);
+
+	if(elem=root.FirstChildElement("name")){
+		name=elem.Text();
+	}
+
+	if(elem=root.FirstChildElement("description")){
+		description=elem.Text();
+	}
+
+	if(elem=root.FirstChildElement("light")){
+		light=atof(elem.Text().c_str());
+	}
+	else{
+		light=0.0f;
+	}
+
+	if(elem=root.FirstChildElement("gravity")){
+		gravity=atof(elem.Text().c_str());
+	}
+	else{
+		gravity=0.0f;
+	}
+
+	if(elem=root.FirstChildElement("shape")){
+		light=elem.Text().c_str();
+	}
+
+	if(elem=root.FirstChildElement("skin")){
+		light=elem.Text().c_str();
+	}
 }
 
 void BloxSection::write(FILE* f){

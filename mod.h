@@ -4,8 +4,10 @@
 #include <Python.h>
 
 #include <string>
+#include <vector>
 
 #include "endian.h"
+#include "version.h"
 
 /**
  * Initialize Python modules and mod-handling routines.
@@ -20,7 +22,17 @@ void load_mods();
 /**
  * Abstract representation of a resource.
 **/
-struct Resource{};
+struct Resource{
+	std::string name;
+
+	unsigned char* data;
+	unsigned length;
+
+	Resource(const std::string& s,unsigned l,FILE* f):name(s),length(l){
+		data=new unsigned char[l];
+		fread(data,sizeof(char),l,f);
+	}
+};
 
 /**
  * Structure of mod privileges.
@@ -29,34 +41,41 @@ struct Permissions{
 	//Access privileges
 
 	/**
+	 * Padding bits reserved for later usage.
+	**/
+	bool res1:1;
+	bool res2:1;
+
+	/**
 	 * Read/write access to the map.
 	**/
-	bool readmap,writemap;
+	bool readmap:1;
+	bool writemap:1;
 
 	/**
 	 * Read/write access to the player.
 	**/
-	bool player;
+	bool player:1;
 
 	/**
 	 * Privilege to hook input.
 	**/
-	bool hookinput;
+	bool hookinput:1;
 
 	/**
 	 * Access to the overlay.
 	**/
-	bool overlay;
+	bool overlay:1;
 
 	/**
 	 * Direct rendering prvilege.
 	**/
-	bool render;
+	bool render:1;
 
 	/**
 	 * Access to metamodding.
 	**/
-	bool metamod;
+	bool metamod:1;
 };
 
 /**
@@ -107,7 +126,7 @@ struct Mod{
 	/**
 	 * The mods this mod is able to metamod (0th entry is always this).
 	**/
-	std::vector<Mod*> metamods;
+	std::vector<std::string> metamods;
 
 	/**
 	 * The mod's interpreter environment, containing all available globals initialized to this mod's context.
@@ -131,10 +150,35 @@ struct Mod{
 	/**
 	 * Compile a mod into a .mod file for easy sharing.
 	 *
-	 * @param fname The mod's path.
+	 * @param f The mod's path.
 	 * @param out The output file's name.
 	**/
-	static void compile(const std::string& folder,const std::string& out);
+	static void compile(const std::string& f,const std::string& out);
+
+	/**
+	 * marshal.dumps, pointer filled by init_mods()
+	 *
+	 * Preloaded for speed.
+	**/
+	static PyObject* marshal_dumps;
+
+	/**
+	 * marshal.loads, pointer filled by init_mods()
+	 *
+	 * Preloaded for speed.
+	**/
+	static PyObject* marshal_loads;
+};
+
+struct Section{
+	/**
+	 * Section signature
+	**/
+	char signature[4];
+	/**
+	 * The length in bytes of the chunk (after this)
+	**/
+	endian::ulil_t chunklength;
 };
 
 /**
@@ -142,23 +186,15 @@ struct Mod{
 **/
 struct ModSection{
 	/**
-	 * "MOD"
-	**/
-	char signature[3];
-	/**
-	 * The length in bytes of the chunk (after this)
-	**/
-	ulil_t chunklength;
-	/**
 	 * The 4-byte version number.
 	**/
-	ulil_t version;
+	endian::ulil_t version;
 	/**
 	 * The type of mod
 	 *
 	 * Devnote: Is this needed?
 	**/
-	ulil8_t type;
+	endian::ulil8_t type;
 	/**
 	 * A bit field of permissions.
 	 *
@@ -169,7 +205,7 @@ struct ModSection{
 	 * 4 - overlay rendering
 	 * 5 - 3d rendering
 	**/
-	ulil8_t permission;
+	endian::ulil8_t permission;
 	/**
 	 * The mod's name.
 	**/
@@ -200,14 +236,6 @@ struct ModSection{
 **/
 struct ResourceSection{
 	/**
-	 * "EMBED"
-	**/
-	char signature[5];
-	/**
-	 * The length in bytes of the chunk (after this)
-	**/
-	ulil_t chunklength;
-	/**
 	 * A list of resources.
 	**/
 	std::vector<std::string> resources;
@@ -225,14 +253,6 @@ struct ResourceSection{
 **/
 struct CodeSection{
 	/**
-	 * "CODE"
-	**/
-	char signature[4];
-	/**
-	 * The length in bytes of the chunk (after this)
-	**/
-	ulil_t chunklength;
-	/**
 	 * A list of Python code objects.
 	**/
 	std::vector<PyObject*> codebits;
@@ -249,15 +269,6 @@ struct CodeSection{
  * The block definition section of the .mod file
 **/
 struct BloxSection{
-	/**
-	 * "BLOX"
-	**/
-	char signature[4];
-	/**
-	 * The length in bytes of the chunk (after this)
-	**/
-	ulil_t chunklength;
-
 	/**
 	 * The basic block definition structure.
 	**/
@@ -301,6 +312,13 @@ struct BloxSection{
 		 * @param f The FILE pointer to the file opened for writing.
 		**/
 		void write(FILE* f);
+
+		/**
+		 * Loads a block definition from the given xml file.
+		 *
+		 * @param fname The file's name.
+		**/
+		void load(const std::string& fname);
 	};
 
 	/**
@@ -314,20 +332,12 @@ struct BloxSection{
 	 * @param f The FILE pointer to the file opened for writing.
 	**/
 	void write(FILE* f);
+
+	~BloxSection(){
+		for(unsigned i=0;i<blockdefs.size();++i){
+			delete blockdefs[i];
+		}
+	}
 };
-
-/**
- * marshal.dumps, pointer filled by init_mods()
- *
- * Preloaded for speed.
-**/
-PyObject* marshal_dumps;
-
-/**
- * marshal.loads, pointer filled by init_mods()
- *
- * Preloaded for speed.
-**/
-PyObject* marshal_loads;
 
 #endif

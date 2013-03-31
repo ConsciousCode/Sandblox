@@ -9,14 +9,14 @@ PyObject* init_sandbloxmod();
 /**
  * Methods in the sandblox mod.
 **/
-static PyMethodDef sandblox_methods={
+static PyMethodDef sandblox_methods[]={
 	{NULL}
 };
 
 /**
  * A definition of the sandblox mod.
 **/
-PyModuleDef sandblox_mod={
+PyModuleDef Sandblox_mod={
 	PyModuleDef_HEAD_INIT,
 	"sandblox",
 	"Interface for global settings.",

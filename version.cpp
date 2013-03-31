@@ -48,3 +48,19 @@ PyObject* Version_New(const char* s){
 	version_init(self,Py_BuildValue("(s)",s));
 	return self;
 }
+
+PyObject* Version_New(unsigned v){
+	PyObject* self=PyObject_New(&VersionType,NULL);
+	if(self==0){
+		return NULL;
+	}
+
+	Version* v=(Version*)self;
+
+	v->major=(v&0xff000000)>>24;
+	v->minor=(v&0x00ff0000)>>16;
+	v->build=(v&0x0000ff00)>>8;
+	v->revision=(v&0x000000ff);
+
+	return self;
+}

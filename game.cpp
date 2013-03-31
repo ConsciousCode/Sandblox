@@ -61,7 +61,7 @@ void Game::init(){
 	guienv=device->getGUIEnvironment();
 
 	//Input hooks
-	input.hooks.push_back(InputHook(KEY,KEY_ESCAPE,esc_hook));
+	input.hooks.push_back(InputHook(NULL,KEY,KEY_ESCAPE,esc_hook));
 
 	//Player init
 	player.init();
