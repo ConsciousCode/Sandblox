@@ -1,11 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mod>
 	<!-- The name of the mod -->
-	<name>Default Mod</name>
+	<name>Default Mod</name> 
+	<!-- A description of the mod -->
+	<description>The default, preincluded mod for Sandblox</description>
 	<!-- The mod's version -->
 	<version>0.1.0.0</version>
 	<!-- The comma-separated authors of the mod -->
-	<authors>Robert McDaniels</authors>
+	<authors>
+		<author name="Robert McDaniels" contrib="Everything"/>
+	</authors>
 	<!-- The permissions requested by the mod -->
 	<permissions>
 		<!-- Read access to the map

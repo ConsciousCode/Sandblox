@@ -5,7 +5,7 @@ What is it?
 
 Sandblox is an extreme sandboxing game "framework" (I use the term loosely here, as it strongly suggests a specific super-genre of gaming and has hardwired game element support) designed to have as much flexible freedom as possible when "modding" it via mods. The game itself has no actual content; the mods the user plugs in define the experience.
 
-The ultimate goal (if it hasn't been achieved by the time this is read) is to have a network of connected game systems, or "universes," players can go to which may have different rules, blocks, recipes, creatures, species, maps, etc., all delivered via packaged cross-compatible Python modules, settings, and resources. When one world because dull, the player can create a new one with different rules or download maps to play.
+The ultimate goal (if it hasn't been achieved by the time this is read) is to have a network of connected game systems, or "universes," players can go to which may have different rules, blocks, recipes, creatures, species, maps, etc., all delivered via packaged cross-compatible Python modules, settings, and resources. When one world becomes dull, the player can create a new one with different rules or download maps to play.
 
 Documentation
 -------------

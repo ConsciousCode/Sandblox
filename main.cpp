@@ -1,52 +1,24 @@
-#include <Python.h>
+/*
+This file is part of Sandblox.
+
+	Sandblox is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
+
+	Sandblox is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with Sandblox.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 #include "include.h"
 
+#include <cstdio>
+
 int main(){
-	Mod::compile("../../defmod/","../../default.mod");
-	#if 0
-	try{
-		//initialize
-		Py_Initialize();
-		game.init();
-
-		//game.scenemanager->addCameraSceneNodeFPS();//0,core::vector3df(0,-40,0),core::vector3df(0,0,0));
-
-		//Block* block=new Block(game.scenemanager->getRootSceneNode());
-		/*scene::ISceneNodeAnimator* anim=game.scenemanager->createRotationAnimator(core::vector3df(0.8f,0,0.8f));
-		if(anim){
-			block->addAnimator(anim);
-			anim->drop();
-			anim=NULL;
-		}*/
-		//block->drop();
-		//block=NULL;
-
-		/*init_hooks();
-		init_mods();*/
-
-		while(game.running() and not game.end){
-			if(game.isactive()){
-				//game.player.move();
-
-				/*for(unsigned i=0;i<game.mods.size();++i){
-					game.mods[i].run();
-				}*/
-
-				//game.chunk.draw();
-
-				//Put it all on the screen
-				game.draw();
-			}
-			else{
-				game.yield();
-			}
-		}
-	}
-	catch(const EndGameError& e){}
-	catch(const HookError& e){
-		/* print error */
-	}
-
 	return 0;
-	#endif
 }

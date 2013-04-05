@@ -1,26 +1,30 @@
+/*
+This file is part of Sandblox.
+
+	Sandblox is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
+
+	Sandblox is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with Sandblox.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 /**
- * Include file bringing everything together.s
+ * Include file bringing everything together.
 **/
 #ifndef SANDBLOX_INCLUDE_H
 #define SANDBLOX_INCLUDE_H
 
-#include <irrlicht.h>
-
-#define TIXML_USE_STL
-#include "xml/tinyxml.h"
-
 #define SANDBLOX_VERSION "0.1.0.0"
-#define SANDBLOX_3DENGINE "Irrlicht"
+#define SANDBLOX_3DENGINE "Ogre3D"
 #define MOD_DIRECTORY "mods/"
 
-#include "mod.h"
-
-//#include "game.h"
-
-//#include "error.h"
-//#include "block.h"
-//#include "color.h"
-//#include "map.h"
 //#include "mod.h"
 
 #endif

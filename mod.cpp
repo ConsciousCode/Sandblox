@@ -1,3 +1,20 @@
+/*
+This file is part of Sandblox.
+
+	Sandblox is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
+
+	Sandblox is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with Sandblox.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 #include <Python.h>
 
 #include <string>
@@ -12,76 +29,55 @@
 
 #include "xml/xml.h"
 
-void load_mods(){
-	DIR* dp=opendir("mods/");
-	dirent* dep;
-
-	while((dep=readdir(dp))){
-
-	}
-}
-
 ///TODO: Actually write this!
 void init_mods(){
 	PyObject* marshal_lib=PyImport_ImportModule("marshal");
 	Mod::marshal_dumps=PyObject_GetAttrString(marshal_lib,"dumps");
 	Mod::marshal_loads=PyObject_GetAttrString(marshal_lib,"loads");
-
-	init_overload();
-
-	//PyObject* m=PyModule_Create(&Sandblox_mod);
 }
 
-bool Mod::can_metamod(Mod* m){
-	for(unsigned i=0;metamods[i]!="";++i){
-		if(metamods[i]==m->name){
-			return true;
-		}
-	}
-	return false;
-}
-
-void Mod::compile(const std::string& f,const std::string& out){
+bool Mod::compile(const std::string& f,const std::string& out){
 	std::string folder(f);
 	if(folder[folder.length()-1]!='/' and folder[folder.length()-1]!='\\'){
 		folder+='/';
 	}
-	Document metadata((folder+"metadata.xml").c_str());
-	if(!metadata.LoadFile()){
-		///TODO: Implement code to handle invalid mods
-		return;
-	}
+	Document metadata(folder+"metadata.xml");
 
-	ModSection ms;
-	ResourceSection rs;
-	CodeSection cs;
-	BloxSection bs;
+	if(!metadata){
+		error="Failed to load/parse mod metadat.";
+		return false;
+	}
 
 	Element root(metadata.root());
-	if(!root.valid()){
-		//See above TODO
-		return;
-	}
-	TiXmlHandle root(elem);
 
 	/*
 	 * Mod metadata
 	*/
 
 	//Name of the mod
-	ms.name=root.FirstChildElement("name").Text();
+	elem=root.child("name");
+	if(elem){
+		name=elem.text;
+	}
+	else{
+		error="Name tag required for mods.";
+		return false;
+	}
 
 	//Description of the mod
-	ms.description=root.FirstChildElement("description").ValueTStr();
+	description=root.child("description").text;
 
 	//The mod's version
-	elem=root.FirstChildElement("version");
+	elem=root.child("version");
 	if(elem){
-		ms.version=s2version(elem->ValueTStr());
+		version=s2version(elem.text);
+	}
+	else{
+		version=s2version("0.0.0.0");
 	}
 
 	//List of authors of the mods
-	elem=root.FirstChildElement("authors");
+	elem=root.child("authors");
 	if(elem){
 		std::string s=elem->ValueTStr();
 		std::string author;
@@ -266,7 +262,6 @@ void Mod::compile(const std::string& f,const std::string& out){
 }
 
 Mod::Mod(const std::string& fname){
-
 	//Prepare the environment
 	PyObject* builtins=PyDict_Copy(PyModule_GetDict(safe_builtins));
 	PyDict_SetItemString(builtins,"__import__",contextualize_import(this));
@@ -276,88 +271,7 @@ Mod::Mod(const std::string& fname){
 	PyDict_SetItemString(environment,"__name__",PyBytes_FromString(name.c_str()));
 }
 
-/*
- * Mod file section write methods
-*/
-
-void ModSection::write(FILE* f){
-	//signature
-	fwrite("MOD ",sizeof(char),4,f);
-
-	//numeric members
-	fwrite(&chunklength,sizeof(chunklength),1,f);
-	fwrite(&version,sizeof(version),1,f);
-	fwrite(&type,sizeof(type),1,f);
-	fwrite(&permission,sizeof(permission),1,f);
-
-	//name
-	unsigned tmp=name.length();
-
-	fwrite(&tmp,sizeof(tmp),1,f);
-	fwrite(name.c_str(),sizeof(char),tmp,f);
-
-	//description
-	tmp=description.length();
-
-	fwrite(&tmp,sizeof(tmp),1,f);
-	fwrite(description.c_str(),sizeof(char),tmp,f);
-
-	//authors
-	tmp=authors.size();
-	unsigned x;
-
-	fwrite(&tmp,sizeof(tmp),1,f);
-
-	for(unsigned i=0;i<tmp;++i){
-		x=authors[i].length();
-		fwrite(&x,sizeof(x),1,f);
-		fwrite(authors[i].c_str(),sizeof(char),x,f);
-	}
-
-	//metamods
-	tmp=metamods.size();
-
-	fwrite(&tmp,sizeof(tmp),1,f);
-
-	for(unsigned i=0;i<tmp;++i){
-		x=metamods[i].length();
-		fwrite(&x,sizeof(x),1,f);
-		fwrite(metamods[i].c_str(),sizeof(char),x,f);
-	}
-}
-
-void ResourceSection::write(FILE* f){
-	//signature
-	fwrite("EMBD",sizeof(char),4,f);
-
-	//numeric members
-	fwrite(&chunklength,sizeof(chunklength),1,f);
-
-	//resources
-	unsigned tmp=resources.size();
-	unsigned x;
-	std::string s;
-	FILE* rc;
-
-	fwrite(&tmp,sizeof(tmp),1,f);
-
-	for(unsigned i=0;i<tmp;++i){
-		s=resources[i];
-		x=s.length();
-		rc=fopen(s.c_str(),"r");
-		if(!rc){
-			continue;
-		}
-		//write filename
-		fwrite(&x,sizeof(x),1,f);
-		fwrite(s.c_str(),sizeof(char),x,f);
-
-		//copy file
-		while(!feof(rc)){
-			fputc(fgetc(f),rc);
-		}
-	}
-}
+#if 0
 
 bool Mod::load(const std::string& fname){
 	struct ModHeader{
@@ -479,123 +393,4 @@ bool Mod::load(const std::string& fname){
 	}
 }
 
-void CodeSection::write(FILE* f){
-	//signature
-	fwrite("EMBED",sizeof(char),5,f);
-
-	//numeric members
-	fwrite(&chunklength,sizeof(chunklength),1,f);
-
-	//code bits
-	unsigned tmp=codebits.size();
-	unsigned x;
-	PyObject* out;
-
-	fwrite(&tmp,sizeof(tmp),1,f);
-
-	for(unsigned i=0;i<tmp;++i){
-		out=PyObject_Call(codebits[i]);
-		if(out){
-			x=PyBytes_Size(out);
-			fwrite(&x,sizeof(x),1,f);
-			fwrite(PyBytes_AsString(out),sizeof(char),x,f);
-		}
-		else{
-			//Just ignore the invalid code object
-			PyErr_Clear();
-		}
-	}
-}
-
-void BloxSection::BlockDef::write(FILE* f){
-	//name
-	unsigned tmp=name.length();
-
-	fwrite(&tmp,sizeof(tmp),1,f);
-	fwrite(name.c_str(),sizeof(char),tmp,f);
-
-	//description
-	tmp=description.length();
-
-	fwrite(&tmp,sizeof(tmp),1,f);
-	fwrite(description.c_str(),sizeof(char),tmp,f);
-
-	//numeric members
-	fwrite(&light,sizeof(light),1,f);
-	fwrite(&gravity,sizeof(gravity),1,f);
-
-	//code name
-	tmp=code.length();
-	fwrite(&tmp,sizeof(tmp),1,f);
-	fwrite(code.c_str(),sizeof(char),tmp,f);
-
-	//mesh
-	tmp=mesh.length();
-
-	fwrite(&tmp,sizeof(tmp),1,f);
-	fwrite(mesh.c_str(),sizeof(char),tmp,f);
-
-	//skin
-	tmp=skin.length();
-
-	fwrite(&tmp,sizeof(tmp),1,f);
-	fwrite(skin.c_str(),sizeof(char),tmp,f);
-}
-
-void BloxSection::BlockDef::load(const std::string& fname){
-	TiXmlDocument block(fname);
-
-	if(!block.LoadFile()){
-		return false;
-	}
-
-	TiXmlHandle handle(&block);
-	TiXmlElement* elem;
-	TiXmlHandle root;
-
-	elem=handle.FirstChildElement("block");
-	if(!elem){
-		return false;
-	}
-	root=TiXmlHandle(elem);
-
-	if(elem=root.FirstChildElement("name")){
-		name=elem.Text();
-	}
-
-	if(elem=root.FirstChildElement("description")){
-		description=elem.Text();
-	}
-
-	if(elem=root.FirstChildElement("light")){
-		light=atof(elem.Text().c_str());
-	}
-	else{
-		light=0.0f;
-	}
-
-	if(elem=root.FirstChildElement("gravity")){
-		gravity=atof(elem.Text().c_str());
-	}
-	else{
-		gravity=0.0f;
-	}
-
-	if(elem=root.FirstChildElement("shape")){
-		light=elem.Text().c_str();
-	}
-
-	if(elem=root.FirstChildElement("skin")){
-		light=elem.Text().c_str();
-	}
-}
-
-void BloxSection::write(FILE* f){
-	unsigned tmp=blockdefs.size();
-
-	fwrite(&tmp,sizeof(tmp),1,f);
-
-	for(unsigned i=0;i<tmp;++i){
-		blockdefs[i]->write(f);
-	}
-}
+#endif

@@ -13,6 +13,7 @@ WORD mods
 [mods]
 	DWORD modlength
 	<see .mod file format, minus the BLOX section>
+
 "BLOX"
 #define all used blocks in a sequential list to make ids very well-defined
 DWORD chunklength
@@ -26,6 +27,7 @@ WORD blocks
 	WORD code
 	STRING mesh
 	STRING skin
+
 "DATA"
 #World chunk data section
 #Stored as a specialized octree with 4-bit "commands" telling the reader how to split the block and a variable number of 12-bit block ids, depending on the command.
