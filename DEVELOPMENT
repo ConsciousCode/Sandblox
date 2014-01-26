@@ -1,0 +1,70 @@
+ * All class definitions should be in .h files, and any functions in corresponding .cpp files
+ * All functions must have a prototype in a .h file and a definition in the corresponding .cpp file
+ * All header files must have the following format:
+   - Commented license (contents of LICENSE in a multiline comment block)
+   - A separate doxygen multiline comment for any file authors (as well as a brief description of the file if necessary)
+     * Note: If no @author is defined, the file should be assumed to have been written by Robert McDaniels
+   - A header guard of the format SANDBLOX_<capitalized path to file with underscores>_<file name>_H
+     * Example: SANDBLOX_ENGINE_IRRLICHT_COLOR_H corresponds to engine/irrlicht/color.h
+     * Note: A header guard has both #ifndef <guard> and #define <guard> within the #ifndef block
+	 * Code within a header guard should not be indented
+   - Included files
+     * In the following order:
+	   - Library headers (Python.h before anything else, if used)
+	   - STL headers
+	   - C Standard headers
+	   - Dependencies from other project directories (Ex: "../../spam.h" or "spam/and/eggs.h")
+	   - Dependencies within the same directory
+	 * Note that each group should have an empty line separating it from other groups
+   - Code
+   - #endif
+   - A single empty line
+ * All .cpp files must have the following format:
+   - Commented license (contents of LICENSE in a multiline comment block)
+   - A separate doxygen multiline comment for any file authors (as well as a brief description of the file if necessary)
+     * Note: If no @author is defined, the file should be assumed to have the same author(s) as the corresponding .h file
+   - Included files
+     * In the following order:
+	   - Library headers that weren't included in the header (Python.h before anything else, if used)
+	   - The corresponding .h file
+	   - STL headers that weren't included in the header
+	   - C Standard headers that weren't included in the header
+	   - Dependencies from other project directories that weren't included in the header (Ex: "../../spam.h" or "spam/and/eggs.h")
+	   - Dependencies within the same directory that weren't included in the header
+	 * Note that each group should have an empty line separating it from other groups
+ * Any classes/functions to be exposed mostly in the Python API should be in the python/ directory
+   - Note that this does not include classes/functions wrapping around Python functionality
+ * Any classes/functions explicit to a specific rendering engine should be in the engine/<engine name>/ directory
+   - Make sure it follows the standard engine interface, and add the includes to engine/engine.h under preprocessor switches
+   - Engine-specific code should NEVER appear outside of engine/<engine name>/ - the engine interface must be used as a proxy
+ * All non-static classes, functions, and variables must have full Doxygen documentation in their header files
+   - Unless they are being exposed to the Python API, in which case documentation should be through the standard Python documentation interface
+     * Be descriptive!
+ * Try to comment anything that needs commenting to be effectively understood
+ * DO NOT push to the repository unless you are sure your code works - no obvious bugs, and most certainly no compiler errors
+   - Be sure to at least test the portions changed by the code, TRYING to break it
+ * Make sure you aren't working on files another team member is working on
+   - I'm trying to keep this project somewhat modular to avoid repository conflicts, so work on independent files and contact me when you need an include file to be changed to include your code
+   - In case it wasn't clear from the last point, DO NOT MODIFY INCLUDE FILES. They are to be run by a single person at any given time who should be contacted when code needs to be included.
+   - Generally, there will be an include file for every folder with C/++ code in it
+ * When writing Python C/++ extensions, use the following coding guidelines:
+   - A function intended to be used in C/++ should have a C/++ version the Python version calls after parameter/type-checking
+   - Functions not intended to be used in C/++ (including the Python versions of the previous point) should be static to the .cpp file
+   - A Python object structure should have a "py" prefix, and must be defined in a header along with any C/++ function prototypes (which may be methods)
+   - Structures used to define a Python type (PyMemberDef, PyMethodDef, PyTypeObject, etc) must be static to the .cpp file
+   - Every file in python/ needs a C/++ init() function called by the include file to initialize it for being exported to Python
+   - Be sure to extensively document every possible aspect of the Python object (including function annotations in the init() function)
+     * Note that the standard format for function annotations in Sandblox is (type,docstring), type being the type of the argument - if the argument may have more than one possible type, the annotation may simply be docstring
+	 * The -> annotation should be the specific function return type - if it only returns None, explicitly use None
+   - Standard Python function definitions (__init__, __add__, etc) in C/++ should ideally be of the form "<name of C/++ structure>___<function name>__"
+     * Ex: PyObject* pyEgg___init__(pyEgg* self,PyObject* args,PyObject* kwargs){ ... }
+ * For any code, Python or C/++, structs/class should be CamelCase and everything else should be lowercase and separated_by_underscores
+   - The only acceptable exception to this rule is a Python type intended to be exported as a builtin (Ex: uint)
+ * All files must use tab indentation, including Python files.
+   - Yes, this goes against the standard Python style guide, but tabs are much more flexible when it comes to display. Where spaces force a programmer into a particular indentation, the width of the tab character can be defined by almost any IDE. In addition, less advanced IDEs treat spaces as they are, spaces, and don't allow for nice traversal of indents (this can even happen in advanced IDEs).
+ * All files should use a UTF-8 encoding
+   - Ordinarily this won't be an issue because English is entirely within ASCII, but I will keep this point for any future issues that may arise.
+ * Typically, files should be named after the main structure in the file, a la Java
+   - Sometimes, similar-function structures may be included in the same file, particularly if they don't have much extra functionality. In these cases, the file should be named after the common concept/functionality
+   - Similarly, headers that only contain function prototypes may be named after their common concept/functionality
+ * Typically, files should also be entirely lowercase

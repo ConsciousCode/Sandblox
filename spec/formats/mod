@@ -1,0 +1,28 @@
+.mod file format (little endian)
+
+"MOD "
+#mod metadata section
+DWORD chunklength
+DWORD version
+STRING name
+STRING description
+BYTE authors
+[authors]
+	STRING author
+	STRING contrib
+"EMBD" #Embedded resources
+DWORD chunklength
+<compressed file archive>
+"CODE"
+#Python code section
+DWORD chunklength
+WORD codebits
+[codebits]
+	<bytestream for code object>
+"BLOX"
+#Block definition section
+DWORD chunklength
+WORD blocks
+[blocks]
+	STRING name
+	STRING description

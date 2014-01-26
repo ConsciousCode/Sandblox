@@ -1,0 +1,126 @@
+Universal Block Format, ubf
+
+UVF is technically a chunk-based format, but the order specified is *strongly* encouraged by any implementation. However, good implementations should be capable of reading them in any order (excluding the first chunk which is mandatory).
+
+Chunk id's follow the PNG standard of case sensitivity for indicating chunk properties. The case of the first letter indicates if the chunk is critical, the second is if it's public, the third is reserved (and mandatory to be capital), and the fourth is if it's safe to copy. Uppercase indicates true.
+
+Whenever block side ordering become an issue, the format will always use the order +z, +y, +x, -z, -y, -x, based on a block positioned with its center at origin, and the sides described by the sign of the axis they're on.
+
+Finally, note that because of the complexity and extensiveness of this format, the standard implementation will implement it incrementally rather than all at once. Many of these features likely won't be included until late in the design of Sandblox.
+ 
+"UBFH" Generic file header
+uint size = 4
+uint version
+
+"RSRC" Stores raw binary resources for use in mods
+uint size
+uint resources
+[resources]
+	string name
+	uint size
+	byte[size] data
+
+"MODS" Stores bytecode used by mods to define this world
+uint size
+uint mods
+[mods]
+	uint8 mod type (0 = in-place, 1 = hosted)
+	(mod type == 0)
+		string name (extension indicates language)
+		uint size
+		byte[size] bytecode
+	(mod type == 1)
+		This is used for the rare case in which a mod is so big it has to be hosted outside of the file, lest every world using it be much larger with unneeded redundancy. One simple example is the rendering engine.
+		
+		string name (used to identify it in case it's already included)
+		string url (a url from which the mod can be downloaded)
+
+"SAND" Defines the blocks that can be used in the world
+uint size
+uint blocks
+[blocks]
+	string name
+	byte type - 0 for normal block, 1 for template, 2 for model. Other values are reserved.
+	(type == 0)
+		uint[6] sides - each has an id for the resource to use to render the side.
+	(type == 1)
+		<same format as blox>
+		This is a predefined ordering of blocks which should be treated as a single unit, useful for objects which require finer manipulation or have a trivial structure definable using voxel space.
+	(type == 2)
+		<some as-of-yet undecided format for a typical 3D model>
+	uint on_change
+	uint on_move
+	uint on_touch
+	<... any more?>
+
+"BLOX" Describes the structure of the world
+uint size
+uint granularity - the size of the smallest atom defined by the number of subdivisions from a one-meter block. While smaller atoms can be defined in the structure and will be rendered, they will be contained by the granularity-sized slice and the whole will be treated as the most numerous material within it. In the case of a "tie", the material with the smaller id will be used.
+uint zoom - the number of "un"divisions from the one-meter block of the largest block in the structure. This is used to determine the size of the world.
+
+This chunk uses a nibble command-based octree slicing compression scheme. That is, 4 bit commands give how to slice the block as well as implicitly how many "blocks" should be within this block. If a nonatomic block is given a single value, the entire block is that value (a contiguous region). The first bit of the command indicates a metacommand, and what follows depends on which metacommand is used.
+
+So, the first nibble should be considered the root slicing command, followed by as many subdivisions as required by the command. When an atomic slice is found, a byte indicating the block id should be expected, unless a metacommand indicated the id takes more space.
+
+Note that thus far there are 2 reserved block ids, 0 and 255, which represent air and void respectively. Air is simply space which exists but doesn't contain a block, while void is a special block type used to generically represent blocks which are undefined, unknown, or invalid. Typically they'll be used to represent chunks which haven't been generated yet (or were never modified and hence have no reason to be stored), as well as representing non-existent areas often found with strange non-euclidean spaces. Mod programmers are suggested to give void properties that kill players to avoid inescapable situations (again, like those strange non euclidean spaces).
+
+0000 - atomic (that is, no more slicing should be performed and the next block id is the leaf of this branch)
+0001 - x-oriented half (the block should be split on the yz-plane)
+0010 - y-oriented half
+0011 - z-oriented half
+0100 - x-oriented quarter (the block should be split along the xy and xz planes)
+0101 - y-oriented quarter
+0110 - z-oriented quarter
+0111 - oct slice (the block should be split along all planes, creating 8 sub blocks. This indicates an inability to compress further at this level). Unlike other slice commands, this one assumes all contained blocks are atomic unless otherwise specified (as the use-case of all contained blocks being different atomic values is significantly more likely than not)
+
+As previously stated, the first bit indicates a metacommand.
+
+1000 - Extra data included with the following block, which is assumed to be atomic. This metacommand should be followed by the block id, a word indicating the length of the extra data (padded by zeros to get into byte alignment), and the extra data.
+1001 - This indicates that the chunk has a number of free objects within it. After this should be a 16-bit unsigned integer representing the number of objects, followed by a list of those objects using the following format:
+	16-bit id
+	float x,y,z (0-1 offset from the chunk's position)
+	<any extra data if the definition of id requires it>
+	
+	* This format allows for an efficient representation of free-roaming objects which are still somehow related to the grid. Note that any object which occupies more than one atomic block should bind itself to the smallest chunk which contains the entire object.
+	
+	The chunk's definition should come after the object list.
+1010 - Change the local granularity so smaller or larger blocks can be destroyed individually
+1011 - expect a longer block id, 4 bits more than whatever was expected before, for all atomic blocks within the following block.
+1100 - Overlap space. The block should be followed by another block which occupies the same space (but overwrites the first block's data). This is to attempt to simplify (and, by extension, compress) group-based effects.
+1101 - Flux space. Each block in the slice must give an additional 12 bit field (following its atomic block id) split into 6 2-bit sections indicating the strength of the bond in the indicated direction.
+ * 00 - frictionless and unconnected
+ * 01 - "loose", only induces motion when distance increases
+   - If this tries to move more than its limit, the loose bond is broken completely (replaced with an unconnected "bond")
+ * 10 - "frictive", motion of the atom induces motion in the corresponding neighbor.
+   - Movement using this bond comes in two flavors: direct and indirect. Direct movement is when the atom moves in the direction of the neighbor (i.e. pushes), and going beyond the limit results in the same behavior as rigid movement. Indirect movement is when the atom moves in any direction OTHER than opposite that of the neighbor (i.e. typical frictive forces), and going beyond the limit results in the atom moving, but not inducing any movement in its neighbors.
+ * 11 - "rigid", motion of the atom moves rigidly bonded atoms the same way.
+   - If this tries to move more than its limit, those blocks immediately outside of the limit (and hence, "in the way") are destroyed.
+1110 - Nonvoxel space. The format temporarily changes to defining objects by some other 3D modelling scheme, as determined by the following 4-bit code.
+ * 0000 - Polygonal (format unspecified)
+ * 0001 - Curve-controlled modeling (format unspecified)
+ ...
+1111 - Non-euclidean space. Gets rid of the restriction that blocks connect to their euclidean neighbors, allowing for things like portals and bigger-on-the-inside buildings and chests. This is similar to the euclidean format, with some differences. Even while non-euclidean, blocks are sliced, as practical uses are likely going to have euclidean space connected to the outside world via non-euclidean space. The only difference is in the metacommands.
+	The non-euclidean command (1111) now indicates that the format should revert to the default format.
+	
+	The overlap command (1100) in non-euclidean space is now the non-euclidean command, indicating that the next block should include its neighbor information (the reason for this is the overlap command loses almost all meaning in non-euclidean space). This has the following format:
+	
+	bit[n] block_id
+	[6] (number of neighbor blocks)
+		uint8 connection_type
+			0 - coordinate (links to the same world)
+			1 - world (links to another local world)
+			2 - online (links to a hosted world)
+		double x,y,z
+		(if connection_type == 1 or 2)
+			string world/server
+
+Commands:
+ * extra data
+ * all atomic
+ * local granularity change
+ * longer block id
+ * non-euclidean space
+ * nonvoxel space
+ * flux space
+ * overlap space
+   - the block should be followed by another block which occupies the same space. This is to attempt to simplify (and by extension, compress) group-based effects.

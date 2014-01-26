@@ -1,0 +1,96 @@
+World file includes:
+	map data
+
+<worldname>.world (.zip format)
+	(note about the use of the .nbt format:
+		I'm using Notch's .nbt format rather than .json for its strongly typed definition, and by extension
+		its relative speed when compared to a typical .json format. Should issues arise with its use, I'll
+		gladly switch to something more public domain. Note that one major difference with what I'm using
+		is that unlike the traditional .nbt format, what I'm using here is not gzipped (which would be
+		redundant given the whole thing is in a .zip file)
+		
+		Addtionally, I'm adding a few more type tags for use in Sandblox which will occupy the other end of
+		the tag byte's range to avoid conflicts with any future updates to the format. Those tags are
+		as follows:
+		
+		0xff pickle - Should a Python object being stored not fit any of the other categories, this tag
+			should be used. Its payload is the length of the pickled object, then the object itself.
+		0xfe timestamp - A typical unix timestamp. Its payload is a 64-bit integer.
+		0xfd bool - A standard boolean type. The payload should be a single byte.0 is false, and all other
+			values are true (though 1 is standard)
+	)
+	data.nbt - contains data about the world
+		compound "data":{
+			compound "meta":{
+				string "name": World Name
+				byte array "seed": 32 entries <32-byte hash seed used for generating the world>
+				timestamp "created": <when the world was created>
+				timestamp "modified": <when the world was last modified>
+				byte "depth": <the number of subdivisions from the top level to get to the atomic unit>
+				byte "granularity": <the size of the atomic unit, 2^granularity "meters" (note Minecraft is
+					0 granularity)>
+				bool "dynamic": <true if the world should only be modified if the player changes it.
+					Otherwise, newly explored map sections should be generated on-demand. Use to decrease
+					world memory consumption at the cost of CPU (good usage example: when making an
+					adventure map, having this set to keep its size minimal for download, and afterwards
+					unset to speed up gameplay)>
+			}
+			compound "persistent":{
+				<data added by modules to be persistent in the world, e.g. weather patterns, entity
+					locations, etc>
+			}
+		}
+	
+	mods (folder - contains modules the world uses)
+		mods.list - newline (\n) separated list of mods in order of how they should be loaded
+			<Note that anything not listed in here will not be loaded>
+			<blank lines are ignored>
+			<modname 1>.mod\n
+			<modname 2>.mod\n
+			...
+		
+		<modname>.mod (.zip format)
+			meta.nbt
+				compound "meta":{
+					string "name": Mod Name
+					int "version": <each byte represents a versioning number, major.minor.build.revision>
+					list "authors" (list):[
+						list (string): 2 entries[
+							string: <author's name>
+							string: <author's contribution>
+						]
+						...
+					]
+				}
+			
+			blocks (folder - contains block definitions)
+				blocks.list (see mods.list)
+				
+				<blockname>.nbt
+					compound "def":{
+						string "name": <name of the block>
+						compound "interface":{
+							string <the interface's name>: <name of the module connected to this interface>
+							...
+						}
+						compound "resources":{
+							string <the name to load the resource into>: <filename of the resource>
+							...
+						}
+					}
+			
+			resources (folder - contains resources used by the module)
+				<resource name>.<extension>
+				...
+			
+			libs (folder - contains third party libraries used by the module)
+				<library name>.py/pyc (.py takes precedence)
+				...
+			
+			code (folder - contains the module's code)
+				<name>.py/pyc (.py takes precedence)
+				...
+	
+	mapdata.svt - Sliced Voxel Tree
+		This is a custom format developed by yours truly for maximum space efficiency, speed, and
+		flexibility. See the "svt" file for more information on the format.

@@ -4,6 +4,17 @@
 *.dll
 *.so
 
+#Ignore compiled Python files
+*.pyc
+*.pyo
+
+#Generated IDE files either specific to the user or irrelevant to compilation
+*.depend
+*.layout
+
 #Compiler output folders
 bin/
 obj/
+
+#Code I won't use but may be useful later
+old/
